@@ -22,13 +22,22 @@ function resolveConfiguredSlug(
   domain: string,
   statusPageUrl: string | null | undefined,
 ) {
-  if (!statusPageUrl?.includes("{slug}")) return null;
+  if (!statusPageUrl) return null;
 
   const marker = "openstatus-slug-placeholder";
   try {
     const configuredHost = new URL(
       statusPageUrl.split("{slug}").join(marker),
     ).hostname.toLowerCase();
+
+    if (!configuredHost.includes(marker)) {
+      const suffix = `.${configuredHost}`;
+      if (!domain.endsWith(suffix)) return null;
+
+      const slug = domain.slice(0, -suffix.length);
+      return /^[a-z0-9-]{3,}$/.test(slug) ? slug : null;
+    }
+
     const parts = configuredHost.split(marker);
     if (parts.length !== 2) return null;
 

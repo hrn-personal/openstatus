@@ -80,8 +80,8 @@ This guide is divided into three parts: launching the services, setting up analy
     # Any random string, but it must be set on both.
     CRON_SECRET=some-random-string
 
-    # Public origin routed to the status-page container. Slug pages are
-    # published below it, for example https://status.example.com/acme.
+    # Public base domain routed to the status-page container. Slug pages use
+    # subdomains, for example https://acme.status.example.com.
     STATUS_PAGE_URL=https://status.example.com
 
     # Stable hostname customers use as their custom-domain CNAME target.
@@ -198,9 +198,9 @@ Now that the services are running, you can access the dashboard and perform the 
 -   **Status Pages:** `http://localhost:3003`
 
     With `STATUS_PAGE_URL=https://status.example.com`, a page whose slug is
-    `acme` is published at `https://status.example.com/acme`. To use wildcard
-    subdomains instead, set `STATUS_PAGE_URL=https://{slug}.status.example.com`
-    and configure wildcard DNS and proxy routing.
+    `acme` is published at `https://acme.status.example.com`. Configure a
+    wildcard DNS record for `*.status.example.com`; Caddy's catch-all below
+    provisions an individual certificate for each saved slug.
 
     For Caddy, set the hostname users should target with
     `CUSTOM_DOMAIN_CNAME_TARGET=status.example.com`, then enable On-Demand TLS:
@@ -233,8 +233,8 @@ Now that the services are running, you can access the dashboard and perform the 
     A customer then points a CNAME such as `status.acme.com` to
     `status.example.com`. Caddy provisions HTTPS on the first request and
     forwards the original hostname to the status-page container. The dashboard
-    checks `/api/domain-check` through the custom hostname and marks it ready
-    only when the request reaches the matching openstatus page.
+    checks the saved hostname and its live DNS through
+    `status.example.com/api/domain-check`, then marks it ready when both match.
 
     The three `*_VERCEL` values are only for deployments whose status-page app
     is itself hosted on Vercel and should attach domains through Vercel's API.

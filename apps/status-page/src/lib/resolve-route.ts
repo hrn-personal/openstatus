@@ -26,8 +26,12 @@ function resolveConfiguredHost(
     ).hostname.toLowerCase();
 
     if (!configuredHost.includes(marker)) {
-      return requestHost === configuredHost
-        ? { type: "pathname", prefix: "" }
+      const suffix = `.${configuredHost}`;
+      if (!requestHost.endsWith(suffix)) return null;
+
+      const prefix = requestHost.slice(0, -suffix.length);
+      return prefix && !prefix.includes(".")
+        ? { type: "hostname", prefix }
         : null;
     }
 
@@ -64,7 +68,7 @@ export function resolveRoute({
   urlHost: string;
   /** req.nextUrl.pathname */
   pathname: string;
-  /** Public self-hosted status-page URL, optionally containing {slug}. */
+  /** Public self-hosted status-page base domain, optionally containing {slug}. */
   statusPageUrl?: string | null;
 }): ResolvedRoute | null {
   const hostnames = host?.split(/[.:]/) ?? urlHost.split(/[.:]/);
@@ -82,9 +86,6 @@ export function resolveRoute({
   if (configuredHost?.type === "hostname") {
     prefix = configuredHost.prefix;
     type = "hostname";
-  } else if (configuredHost?.type === "pathname") {
-    prefix = (pathnames[1] ?? "").toLowerCase();
-    type = "pathname";
   } else if (
     hostnames.length > 2 &&
     hostnames[0] !== "www" &&

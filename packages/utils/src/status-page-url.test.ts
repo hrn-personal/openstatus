@@ -10,13 +10,13 @@ describe("buildStatusPageUrl", () => {
     );
   });
 
-  it("uses a path under the self-hosted status page URL", () => {
+  it("uses the configured self-hosted domain as the slug suffix", () => {
     expect(
       buildStatusPageUrl({
         slug: "acme",
         baseUrl: "https://status.example.com/",
       }),
-    ).toBe("https://status.example.com/acme");
+    ).toBe("https://acme.status.example.com");
   });
 
   it("supports wildcard-domain URL templates", () => {

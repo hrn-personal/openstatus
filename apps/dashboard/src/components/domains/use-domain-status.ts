@@ -45,9 +45,10 @@ export function useDomainStatus(domain?: string) {
   } = useQuery({
     queryKey: ["self-hosted-custom-domain", domain],
     queryFn: async () => {
-      const response = await fetch(`https://${domain}/api/domain-check`, {
-        cache: "no-store",
-      });
+      const response = await fetch(
+        `https://${customDomainCnameTarget}/api/domain-check?domain=${encodeURIComponent(domain ?? "")}`,
+        { cache: "no-store" },
+      );
       if (!response.ok) return false;
 
       const result: unknown = await response.json();

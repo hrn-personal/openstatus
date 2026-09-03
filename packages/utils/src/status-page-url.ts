@@ -16,5 +16,11 @@ export function buildStatusPageUrl({
     return normalizedBaseUrl.split("{slug}").join(encodeURIComponent(slug));
   }
 
-  return `${normalizedBaseUrl}/${encodeURIComponent(slug)}`;
+  try {
+    const url = new URL(normalizedBaseUrl);
+    url.hostname = `${slug}.${url.hostname}`;
+    return url.toString().replace(/\/$/, "");
+  } catch {
+    return normalizedBaseUrl;
+  }
 }

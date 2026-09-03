@@ -159,8 +159,8 @@ WORKSPACES_HIDE_URL=false
 - **DATABASE_URL**: Must be `http://libsql:8080` (internal container communication)
 - **AUTH_SECRET**: Must be at least 32 characters
 - **NEXT_PUBLIC_URL**: Must include protocol (http:// or https://)
-- **STATUS_PAGE_URL**: Public origin of the status-page service. Slug pages use
-  `/slug`; use `https://{slug}.status.your-domain.com` for wildcard subdomains.
+- **STATUS_PAGE_URL**: Public base domain of the status-page service. Slug pages
+  use subdomains such as `https://slug.status.your-domain.com`.
 - **RESEND_API_KEY**: Required for email login functionality
 
 ### **Getting Help**

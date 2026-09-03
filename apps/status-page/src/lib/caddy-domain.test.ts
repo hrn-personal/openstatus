@@ -35,6 +35,15 @@ describe("resolveCaddyDomainLookup", () => {
     ).toEqual({ domain: "acme.status.example.com", slug: "acme" });
   });
 
+  it("extracts a slug using a configured base domain", () => {
+    expect(
+      resolveCaddyDomainLookup({
+        domain: "acme.status.example.com",
+        statusPageUrl: "https://status.example.com",
+      }),
+    ).toEqual({ domain: "acme.status.example.com", slug: "acme" });
+  });
+
   it("does not treat an unrelated hostname as a slug", () => {
     expect(
       resolveCaddyDomainLookup({

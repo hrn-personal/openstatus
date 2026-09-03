@@ -96,21 +96,32 @@ describe("resolveRoute", () => {
     });
   });
 
-  describe("pathname routing (path-based)", () => {
-    test("configured self-host origin uses the slug path", () => {
+  describe("configured self-host routing", () => {
+    test("configured self-host origin is used as the slug suffix", () => {
       const result = resolveRoute({
-        host: "status.example.com",
+        host: "acme.status.example.com",
         urlHost: "localhost:3000",
-        pathname: "/acme/events",
+        pathname: "/events",
         statusPageUrl: "https://status.example.com",
       });
       expect(result).toEqual({
-        type: "pathname",
+        type: "hostname",
         prefix: "acme",
         locale: "en",
         localeExplicit: false,
         rewritePath: "/acme/en/events",
       });
+    });
+
+    test("configured self-host origin alone resolves no tenant", () => {
+      expect(
+        resolveRoute({
+          host: "status.example.com",
+          urlHost: "localhost:3000",
+          pathname: "/",
+          statusPageUrl: "https://status.example.com",
+        }),
+      ).toBeNull();
     });
 
     test("configured wildcard origin extracts the slug", () => {
