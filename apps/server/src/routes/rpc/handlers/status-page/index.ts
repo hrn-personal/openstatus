@@ -79,6 +79,9 @@ import {
   type ThemeKey,
   validateCustomTheme,
 } from "@openstatus/theme-store";
+import { buildStatusPageUrl } from "@openstatus/utils";
+
+import { env } from "@/env";
 
 import { toConnectError, toServiceCtx } from "../../adapter";
 import { getRpcContext } from "../../interceptors";
@@ -1315,9 +1318,11 @@ export const statusPageServiceImpl: ServiceImpl<typeof StatusPageService> = {
     }
 
     if (!result.acceptedAt) {
-      const verifyUrl = pageData.customDomain
-        ? `https://${pageData.customDomain}/verify/${result.token}`
-        : `https://${pageData.slug}.openstatus.dev/verify/${result.token}`;
+      const verifyUrl = `${buildStatusPageUrl({
+        slug: pageData.slug,
+        customDomain: pageData.customDomain,
+        baseUrl: env.STATUS_PAGE_URL,
+      })}/verify/${result.token}`;
 
       const channel = getChannel("email");
       if (channel?.sendVerification) {

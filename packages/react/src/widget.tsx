@@ -1,3 +1,5 @@
+import { buildStatusPageUrl } from "@openstatus/utils";
+
 import { statusDictionary } from "./utils";
 
 export type Status =
@@ -47,7 +49,13 @@ export async function StatusWidget({ slug, href }: StatusWidgetProps) {
   return (
     <a
       className="inline-flex max-w-fit items-center gap-2 rounded-md border border-gray-200 px-3 py-1 text-sm text-gray-700 hover:bg-gray-100 hover:text-black dark:border-gray-800 dark:text-gray-300 dark:hover:bg-gray-900 dark:hover:text-white"
-      href={href || `https://${slug}.openstatus.dev`}
+      href={
+        href ||
+        buildStatusPageUrl({
+          slug,
+          baseUrl: process.env.STATUS_PAGE_URL,
+        })
+      }
       target="_blank"
       rel="noreferrer"
     >

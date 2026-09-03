@@ -12,6 +12,7 @@ import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { TailwindIndicator } from "@/components/tailwind-indicator";
 import { ThemeProvider } from "@/components/theme-provider";
 import { auth } from "@/lib/auth";
+import { DeploymentProvider } from "@/lib/deployment-context";
 import { TRPCReactProvider } from "@/lib/trpc/client";
 
 import { ogMetadata, twitterMetadata } from "./metadata";
@@ -81,6 +82,12 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const session = await auth();
+  const statusPageBaseUrl = process.env.STATUS_PAGE_URL?.trim() || null;
+  const vercelDomainsConfigured = Boolean(
+    process.env.PROJECT_ID_VERCEL?.trim() &&
+    process.env.TEAM_ID_VERCEL?.trim() &&
+    process.env.VERCEL_AUTH_BEARER_TOKEN?.trim(),
+  );
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -95,29 +102,33 @@ export default async function RootLayout({
         )}
       >
         <SessionProvider session={session}>
-          <TRPCReactProvider>
-            <NuqsAdapter>
-              <ThemeProvider
-                attribute="class"
-                defaultTheme="system"
-                enableSystem
-                disableTransitionOnChange
-              >
-                {children}
-                <TailwindIndicator />
-                <Toaster richColors expand />
-                {process.env.NEXT_PUBLIC_OPENPANEL_CLIENT_ID && (
-                  <OpenPanelComponent
-                    clientId={process.env.NEXT_PUBLIC_OPENPANEL_CLIENT_ID}
-                    trackScreenViews
-                    trackOutgoingLinks
-                    trackAttributes
-                    sessionReplay={{ enabled: true }}
-                  />
-                )}
-              </ThemeProvider>
-            </NuqsAdapter>
-          </TRPCReactProvider>
+          <DeploymentProvider
+            value={{ statusPageBaseUrl, vercelDomainsConfigured }}
+          >
+            <TRPCReactProvider>
+              <NuqsAdapter>
+                <ThemeProvider
+                  attribute="class"
+                  defaultTheme="system"
+                  enableSystem
+                  disableTransitionOnChange
+                >
+                  {children}
+                  <TailwindIndicator />
+                  <Toaster richColors expand />
+                  {process.env.NEXT_PUBLIC_OPENPANEL_CLIENT_ID && (
+                    <OpenPanelComponent
+                      clientId={process.env.NEXT_PUBLIC_OPENPANEL_CLIENT_ID}
+                      trackScreenViews
+                      trackOutgoingLinks
+                      trackAttributes
+                      sessionReplay={{ enabled: true }}
+                    />
+                  )}
+                </ThemeProvider>
+              </NuqsAdapter>
+            </TRPCReactProvider>
+          </DeploymentProvider>
         </SessionProvider>
       </body>
     </html>

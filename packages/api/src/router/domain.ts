@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { env } from "../env";
-import { vercelFetch } from "../lib/vercel";
+import { isVercelDomainsConfigured, vercelFetch } from "../lib/vercel";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
 export const domainConfigResponseSchema = z.object({
@@ -55,7 +55,7 @@ export const domainRouter = createTRPCRouter({
   getDomainResponse: protectedProcedure
     .input(z.object({ domain: z.string().optional() }))
     .query(async (opts) => {
-      if (!opts.input.domain) {
+      if (!opts.input.domain || !isVercelDomainsConfigured()) {
         return null;
       }
       const data = await vercelFetch(
@@ -78,7 +78,7 @@ export const domainRouter = createTRPCRouter({
   getConfigResponse: protectedProcedure
     .input(z.object({ domain: z.string().optional() }))
     .query(async (opts) => {
-      if (!opts.input.domain) {
+      if (!opts.input.domain || !isVercelDomainsConfigured()) {
         return null;
       }
       const data = await vercelFetch(
@@ -91,7 +91,7 @@ export const domainRouter = createTRPCRouter({
   verifyDomain: protectedProcedure
     .input(z.object({ domain: z.string().optional() }))
     .query(async (opts) => {
-      if (!opts.input.domain) {
+      if (!opts.input.domain || !isVercelDomainsConfigured()) {
         return null;
       }
       const data = await vercelFetch(

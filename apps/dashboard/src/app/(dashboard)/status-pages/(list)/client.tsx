@@ -12,14 +12,16 @@ import {
   SectionHeader,
   SectionTitle,
 } from "@/components/content/section";
-import { columns } from "@/components/data-table/status-pages/columns";
+import { getColumns } from "@/components/data-table/status-pages/columns";
 import { DataTable } from "@/components/ui/data-table/data-table";
 import { DataTablePaginationSimple } from "@/components/ui/data-table/data-table-pagination";
 import { DataTableSkeleton } from "@/components/ui/data-table/data-table-skeleton";
+import { useDeploymentConfig } from "@/lib/deployment-context";
 import { useTRPC } from "@/lib/trpc/client";
 
 export function Client() {
   const trpc = useTRPC();
+  const { statusPageBaseUrl } = useDeploymentConfig();
   const { data: statusPages } = useQuery(trpc.page.list.queryOptions());
 
   if (!statusPages) return <DataTableSkeleton rows={3} />;
@@ -41,7 +43,7 @@ export function Client() {
           Create and manage your status pages.
         </SectionDescription>
         <DataTable
-          columns={columns}
+          columns={getColumns(statusPageBaseUrl)}
           data={statusPages}
           paginationComponent={DataTablePaginationSimple}
         />

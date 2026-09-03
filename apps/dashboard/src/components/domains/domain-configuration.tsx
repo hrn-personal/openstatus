@@ -17,6 +17,7 @@ import {
   StepCardIndicator,
   StepCardTitle,
 } from "@/components/forms/step-card";
+import { useDeploymentConfig } from "@/lib/deployment-context";
 import { getSubdomain } from "@/lib/domains";
 
 import { DomainStatusIcon } from "./domain-status-icon";
@@ -48,7 +49,28 @@ const A_RECORD_VALUE =
   process.env.NEXT_PUBLIC_VERCEL_PROJECT_DNS_A || "76.76.21.21";
 
 export default function DomainConfiguration({ domain }: { domain: string }) {
-  const { status, domainJson, steps, isLoading } = useDomainStatus(domain);
+  const { status, domainJson, steps, isLoading, managed } =
+    useDomainStatus(domain);
+  const { statusPageBaseUrl } = useDeploymentConfig();
+
+  if (!managed) {
+    return (
+      <div className="space-y-2 px-4 text-sm">
+        <p className="font-semibold">Managed by your reverse proxy</p>
+        <p className="text-muted-foreground">
+          Point <InlineSnippet>{domain}</InlineSnippet> at your server,
+          terminate TLS there, and proxy requests to the status-page service
+          while preserving the original Host or X-Forwarded-Host header.
+        </p>
+        {statusPageBaseUrl ? (
+          <p className="text-muted-foreground">
+            The configured status-page URL is{" "}
+            <InlineSnippet>{statusPageBaseUrl}</InlineSnippet>.
+          </p>
+        ) : null}
+      </div>
+    );
+  }
 
   if (isLoading && !domainJson)
     return (

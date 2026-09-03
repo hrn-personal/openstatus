@@ -1,16 +1,5 @@
+import { buildStatusPageUrl } from "@openstatus/utils";
 import type { Metadata } from "next";
-
-function host({
-  slug,
-  customDomain,
-}: {
-  slug: string;
-  customDomain?: string | null;
-}) {
-  return customDomain
-    ? `https://${customDomain}`
-    : `https://${slug}.openstatus.dev`;
-}
 
 // Next.js merges `alternates` shallowly, so a deeper segment that sets it
 // replaces the parent's entirely — always return the full object.
@@ -23,7 +12,11 @@ export function statusPageAlternates({
   customDomain?: string | null;
   markdownPath?: string;
 }): Metadata["alternates"] {
-  const base = host({ slug, customDomain });
+  const base = buildStatusPageUrl({
+    slug,
+    customDomain,
+    baseUrl: process.env.STATUS_PAGE_URL,
+  });
   return {
     canonical: base,
     types: {

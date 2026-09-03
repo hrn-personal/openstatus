@@ -20,6 +20,7 @@ export {
 export { buildCurlCommand, type CurlRequest } from "./curl";
 export { yieldMany, iteratorToStream } from "./stream";
 export { statusLabel, type PageUpdateStatus } from "./status";
+export { buildStatusPageUrl } from "./status-page-url";
 
 export function transformHeaders(headers: { key: string; value: string }[]) {
   return headers.length > 0

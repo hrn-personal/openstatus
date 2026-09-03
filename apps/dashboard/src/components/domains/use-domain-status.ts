@@ -3,22 +3,29 @@ import { useQuery } from "@tanstack/react-query";
 import { useCallback } from "react";
 
 import type { StepCardVariant } from "@/components/forms/step-card";
+import { useDeploymentConfig } from "@/lib/deployment-context";
 import { useTRPC } from "@/lib/trpc/client";
 
 export function useDomainStatus(domain?: string) {
   const trpc = useTRPC();
+  const { vercelDomainsConfigured } = useDeploymentConfig();
+  const enabled = vercelDomainsConfigured && Boolean(domain);
   const {
     data: domainJson,
     refetch: refetchDomain,
     isLoading: isLoadingDomain,
     isRefetching: isRefetchingDomain,
-  } = useQuery(trpc.domain.getDomainResponse.queryOptions({ domain }));
+  } = useQuery(
+    trpc.domain.getDomainResponse.queryOptions({ domain }, { enabled }),
+  );
   const {
     data: configJson,
     refetch: refetchConfig,
     isLoading: isLoadingConfig,
     isRefetching: isRefetchingConfig,
-  } = useQuery(trpc.domain.getConfigResponse.queryOptions({ domain }));
+  } = useQuery(
+    trpc.domain.getConfigResponse.queryOptions({ domain }, { enabled }),
+  );
   const {
     data: verificationJson,
     refetch: refetchVerification,
@@ -27,7 +34,7 @@ export function useDomainStatus(domain?: string) {
   } = useQuery(
     trpc.domain.verifyDomain.queryOptions(
       { domain },
-      { enabled: !domainJson?.verified },
+      { enabled: enabled && !domainJson?.verified },
     ),
   );
 
@@ -87,6 +94,7 @@ export function useDomainStatus(domain?: string) {
   } satisfies Record<string, StepCardVariant>;
 
   return {
+    managed: vercelDomainsConfigured,
     status,
     domainJson,
     steps,

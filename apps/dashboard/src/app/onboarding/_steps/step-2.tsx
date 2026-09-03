@@ -22,6 +22,7 @@ import {
   OnboardingStepper,
 } from "@/components/layout/onboarding-layout";
 import { OnboardingStatusPagePreview } from "@/components/onboarding/status-page-preview";
+import { useStatusPageUrl } from "@/lib/deployment-context";
 
 import type { OnboardingPage } from "../client";
 
@@ -49,6 +50,7 @@ export function Step2({
   onContinue: () => void;
 }) {
   const isLocked = pageStatus === "completed" && !!createdPageData;
+  const publishedUrl = useStatusPageUrl(createdPageData?.slug ?? slugFallback);
 
   // Live preview tracks the form values via `onValuesChange` below. Defaults
   // mirror the form's initial state so the preview renders something on first
@@ -78,8 +80,8 @@ export function Step2({
         </OnboardingStepHeader>
         {isLocked ? (
           <OnboardingLockedSummary
-            value={`${createdPageData?.slug}.openstatus.dev`}
-            href={`https://${createdPageData?.slug}.openstatus.dev`}
+            value={publishedUrl}
+            href={publishedUrl}
             helper="Theme, components, and visibility are editable later from page settings."
           />
         ) : (

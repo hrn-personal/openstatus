@@ -18,7 +18,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const host = stripHostPort(
     headerStore.get("x-forwarded-host") ?? headerStore.get("host"),
   );
-  const route = resolveRoute({ host, urlHost: host ?? "", pathname: "/" });
+  const route = resolveRoute({
+    host,
+    urlHost: host ?? "",
+    pathname: "/",
+    statusPageUrl: process.env.STATUS_PAGE_URL,
+  });
   if (!route) return [];
 
   const row = await db
@@ -30,7 +35,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })
     .from(page)
     .where(
-      sql`lower(${page.slug}) = ${route.prefix} OR lower(${page.customDomain}) = ${route.prefix}`,
+      sql`lower(${page.slug}) = ${route.prefix} OR lower(${page.customDomain}) IN (${route.prefix}, ${host ?? ""})`,
     )
     .get();
   // Only public, indexable pages belong in a sitemap — gated content must not

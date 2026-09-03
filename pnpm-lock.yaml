@@ -2640,6 +2640,9 @@ importers:
 
   packages/react:
     dependencies:
+      '@openstatus/utils':
+        specifier: workspace:*
+        version: link:../utils
       react:
         specifier: ^18.0.0
         version: 18.3.1

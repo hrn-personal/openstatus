@@ -13,6 +13,41 @@ export interface ResolvedRoute {
   rewritePath: string;
 }
 
+function resolveConfiguredHost(
+  statusPageUrl: string | null | undefined,
+  requestHost: string | null,
+): Pick<ResolvedRoute, "type" | "prefix"> | null {
+  if (!statusPageUrl || !requestHost) return null;
+
+  const marker = "openstatus-slug-placeholder";
+  try {
+    const configuredHost = new URL(
+      statusPageUrl.split("{slug}").join(marker),
+    ).hostname.toLowerCase();
+
+    if (!configuredHost.includes(marker)) {
+      return requestHost === configuredHost
+        ? { type: "pathname", prefix: "" }
+        : null;
+    }
+
+    const [start, end = ""] = configuredHost.split(marker);
+    if (!requestHost.startsWith(start) || !requestHost.endsWith(end)) {
+      return null;
+    }
+
+    const prefix = requestHost.slice(
+      start.length,
+      requestHost.length - end.length,
+    );
+    return prefix && !prefix.includes(".")
+      ? { type: "hostname", prefix }
+      : null;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Resolves the routing type, page slug, and locale from request context.
  * Pure function — no side effects, no DB calls, no Next.js APIs.
@@ -21,6 +56,7 @@ export function resolveRoute({
   host,
   urlHost,
   pathname,
+  statusPageUrl,
 }: {
   /** x-forwarded-host header value */
   host: string | null;
@@ -28,6 +64,8 @@ export function resolveRoute({
   urlHost: string;
   /** req.nextUrl.pathname */
   pathname: string;
+  /** Public self-hosted status-page URL, optionally containing {slug}. */
+  statusPageUrl?: string | null;
 }): ResolvedRoute | null {
   const hostnames = host?.split(/[.:]/) ?? urlHost.split(/[.:]/);
   const pathnames = pathname.split("/");
@@ -35,11 +73,19 @@ export function resolveRoute({
   // Prefer x-forwarded-host for custom-domain detection (behind reverse proxy/CDN,
   // req.nextUrl.host may be an internal host, not the real custom domain)
   const subdomain = getValidSubdomain(host ?? urlHost);
+  const requestHost = stripHostPort(host ?? urlHost)?.toLowerCase() ?? null;
+  const configuredHost = resolveConfiguredHost(statusPageUrl, requestHost);
 
   let prefix: string;
   let type: RouteType;
 
-  if (
+  if (configuredHost?.type === "hostname") {
+    prefix = configuredHost.prefix;
+    type = "hostname";
+  } else if (configuredHost?.type === "pathname") {
+    prefix = (pathnames[1] ?? "").toLowerCase();
+    type = "pathname";
+  } else if (
     hostnames.length > 2 &&
     hostnames[0] !== "www" &&
     !urlHost.endsWith(".vercel.app")
@@ -51,7 +97,7 @@ export function resolveRoute({
     type = "pathname";
   }
 
-  if (subdomain !== null) {
+  if (!configuredHost && subdomain !== null) {
     prefix = subdomain.toLowerCase();
     // Host-keyed: the path carries no slug. Apex (`acme.com`) and `www.` custom
     // domains fail the label check above, and reading their first segment as the

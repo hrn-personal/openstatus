@@ -10,6 +10,7 @@ import { FormSheetStatusReportUpdateCreate } from "@/components/forms/status-rep
 import { FormSheetStatusReport } from "@/components/forms/status-report/sheet";
 import { toCheckboxTreeItems } from "@/components/ui/checkbox-tree";
 import { getActions } from "@/data/status-reports.client";
+import { useStatusPageUrl } from "@/lib/deployment-context";
 import { useTRPC } from "@/lib/trpc/client";
 
 type StatusReport = RouterOutputs["statusReport"]["list"][number];
@@ -24,17 +25,16 @@ export function DataTableRowActions({ row }: { row: Row<StatusReport> }) {
 export function StatusReportRowActions({ report }: { report: StatusReport }) {
   const buttonCreateRef = useRef<HTMLButtonElement>(null);
   const buttonUpdateRef = useRef<HTMLButtonElement>(null);
+  const statusPageUrl = useStatusPageUrl(
+    report.page.slug,
+    report.page.customDomain,
+  );
   const actions = getActions({
     "create-update": () => buttonCreateRef.current?.click(),
     edit: () => buttonUpdateRef.current?.click(),
     "view-report": () => {
       if (typeof window !== "undefined") {
-        window.open(
-          `https://${
-            report.page.customDomain || `${report.page.slug}.openstatus.dev`
-          }/events/report/${report.id}`,
-          "_blank",
-        );
+        window.open(`${statusPageUrl}/events/report/${report.id}`, "_blank");
       }
     },
   });

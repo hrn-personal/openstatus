@@ -4,7 +4,9 @@ import { and, eq, isNull, sql } from "@openstatus/db";
 import { db } from "@openstatus/db/src/db";
 import { page, pageSubscriber } from "@openstatus/db/src/schema";
 import { SubscribeEmail, sendEmail } from "@openstatus/emails";
+import { buildStatusPageUrl } from "@openstatus/utils";
 
+import { env } from "@/env";
 import { OpenStatusApiError, openApiErrorResponses } from "@/libs/errors";
 import { trackMiddleware } from "@/libs/middlewares";
 
@@ -105,7 +107,11 @@ export function registerPostPageSubscriber(api: typeof pageSubscribersApi) {
       .returning()
       .get();
 
-    const link = `https://${_page.slug}.openstatus.dev/verify/${token}`;
+    const link = `${buildStatusPageUrl({
+      slug: _page.slug,
+      customDomain: _page.customDomain,
+      baseUrl: env.STATUS_PAGE_URL,
+    })}/verify/${token}`;
 
     await sendEmail({
       react: SubscribeEmail({

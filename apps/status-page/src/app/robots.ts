@@ -23,7 +23,12 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
   // from its canonical base — never reflect the raw host (validating the slug
   // prefix alone lets a forged host like `acme.openstatus.dev.evil.com` through).
   const route = host
-    ? resolveRoute({ host, urlHost: host, pathname: "/" })
+    ? resolveRoute({
+        host,
+        urlHost: host,
+        pathname: "/",
+        statusPageUrl: process.env.STATUS_PAGE_URL,
+      })
     : null;
   const row = route
     ? await db
@@ -34,7 +39,7 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
         })
         .from(page)
         .where(
-          sql`lower(${page.slug}) = ${route.prefix} OR lower(${page.customDomain}) = ${route.prefix}`,
+          sql`lower(${page.slug}) = ${route.prefix} OR lower(${page.customDomain}) IN (${route.prefix}, ${host ?? ""})`,
         )
         .get()
     : undefined;

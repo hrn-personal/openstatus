@@ -6,6 +6,7 @@
 # DATABASE_AUTH_TOKEN= (leave empty for local libsql)
 # AUTH_SECRET=your-32-character-secret
 # NEXT_PUBLIC_URL=https://your-domain.com
+# STATUS_PAGE_URL=https://status.your-domain.com
 # RESEND_API_KEY=your-resend-api-key
 #
 # 📚 Full Guide: See COOLIFY_ENVIRONMENT_GUIDE.md
@@ -23,6 +24,7 @@ x-common-variables: &common-env # Database Configuration
   # Authentication
   AUTH_SECRET: ${AUTH_SECRET:-default-secret-change-me}
   NEXT_PUBLIC_URL: ${NEXT_PUBLIC_URL:-http://localhost:3002}
+  STATUS_PAGE_URL: ${STATUS_PAGE_URL:-http://localhost:3003}
   SELF_HOST: ${SELF_HOST:-true}
 
   # OAuth Providers (Optional)

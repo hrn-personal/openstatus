@@ -3,6 +3,7 @@ import { page, selectPageSchema } from "@openstatus/db/src/schema";
 import { NextResponse } from "next/server";
 
 import { auth } from "./lib/auth";
+import { stripHostPort } from "./lib/domain";
 import { resolveClientIp } from "./lib/http/client-ip";
 import { createProtectedCookieKey } from "./lib/protected";
 import { applyPageLocaleOverride } from "./lib/proxy/apply-page-locale-override";
@@ -23,6 +24,7 @@ export default auth(async (req) => {
   // caches to key on it so a markdown variant is never served to a browser.
   passthroughResponse.headers.set("Vary", "Accept");
   const host = req.headers.get("x-forwarded-host");
+  const requestHost = stripHostPort(host ?? url.host)?.toLowerCase() ?? "";
 
   // HTML served via internal rewrite shares its URL with the markdown variant —
   // carry the same Vary as the passthrough so caches don't cross them.
@@ -55,6 +57,7 @@ export default auth(async (req) => {
     host,
     urlHost: url.host,
     pathname,
+    statusPageUrl: process.env.STATUS_PAGE_URL,
   });
 
   if (!initialRoute) {
@@ -79,7 +82,7 @@ export default auth(async (req) => {
     .select()
     .from(page)
     .where(
-      sql`lower(${page.slug}) = ${initialRoute.prefix} OR lower(${page.customDomain}) = ${initialRoute.prefix}`,
+      sql`lower(${page.slug}) = ${initialRoute.prefix} OR lower(${page.customDomain}) IN (${initialRoute.prefix}, ${requestHost})`,
     )
     .get();
 

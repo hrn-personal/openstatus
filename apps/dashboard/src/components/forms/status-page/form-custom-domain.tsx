@@ -60,7 +60,9 @@ export function FormCustomDomain({
     },
   });
   const [isPending, startTransition] = useTransition();
-  const { refresh, isLoading } = useDomainStatus(defaultValues?.domain);
+  const { refresh, isLoading, managed } = useDomainStatus(
+    defaultValues?.domain,
+  );
 
   function submitAction(values: FormValues) {
     if (isPending) return;
@@ -87,9 +89,10 @@ export function FormCustomDomain({
 
   // NOTE: poll every 30 seconds to check for the status
   useEffect(() => {
+    if (!managed) return;
     const interval = setInterval(() => refresh(), 30_000);
     return () => clearInterval(interval);
-  }, [refresh]);
+  }, [managed, refresh]);
 
   return (
     <Form {...form}>
@@ -156,7 +159,7 @@ export function FormCustomDomain({
                 <Button
                   type="button"
                   variant="ghost"
-                  disabled={isPending || isLoading}
+                  disabled={isPending || isLoading || !managed}
                   onClick={refresh}
                   className="hidden sm:block"
                 >

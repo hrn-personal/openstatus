@@ -45,6 +45,7 @@ export async function GET(
     // Strip the port: custom-domain lookups exact-match the port-less
     // page.customDomain (parity with sitemap.ts / robots.ts).
     const host = stripHostPort(request.headers.get("x-forwarded-host"));
+    const requestHost = stripHostPort(host ?? url.host)?.toLowerCase() ?? "";
     // Host-keyed deploys (subdomain/custom domain) resolve from the host; a
     // path-based deploy carries the slug in the URL (`{slug}/summary.json`),
     // so feed it through resolveRoute as the pathname prefix.
@@ -52,6 +53,7 @@ export async function GET(
       host,
       urlHost: host ?? url.host,
       pathname: pathSlug ? `/${pathSlug}` : "/",
+      statusPageUrl: process.env.STATUS_PAGE_URL,
     });
     if (!route) return json({ error: "Not Found" }, 404);
 
@@ -59,7 +61,7 @@ export async function GET(
       .select({ slug: page.slug })
       .from(page)
       .where(
-        sql`lower(${page.slug}) = ${route.prefix} OR lower(${page.customDomain}) = ${route.prefix}`,
+        sql`lower(${page.slug}) = ${route.prefix} OR lower(${page.customDomain}) IN (${route.prefix}, ${requestHost})`,
       )
       .get();
     if (!row) return json({ error: "Not Found" }, 404);

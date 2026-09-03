@@ -67,7 +67,7 @@ This guide is divided into three parts: launching the services, setting up analy
     ```bash
     cp .env.docker.example .env.docker
     ```
-    Open `.env.docker` in a text editor. Four values are marked `[REQUIRED]` and must be set: `AUTH_SECRET`, `RESEND_API_KEY` (magic-link login won't work without it), `SELF_HOST`, and `NEXT_PUBLIC_URL`. For a complete setup, review the file for other variables like OAuth providers or email services.
+    Open `.env.docker` in a text editor. Set every value marked `[REQUIRED]`, including `NEXT_PUBLIC_URL` for the dashboard and `STATUS_PAGE_URL` for the public status-page service. For a complete setup, review the file for other variables like OAuth providers or email services.
 
     Two values matter for the rest of this guide — set them now:
     ```env
@@ -79,6 +79,10 @@ This guide is divided into three parts: launching the services, setting up analy
     # Shared secret the ingest server uses to authenticate to the workflows app.
     # Any random string, but it must be set on both.
     CRON_SECRET=some-random-string
+
+    # Public origin routed to the status-page container. Slug pages are
+    # published below it, for example https://status.example.com/acme.
+    STATUS_PAGE_URL=https://status.example.com
     ```
 
     You'll fill in the Tinybird tokens in Part 2, once the container is running.
@@ -189,6 +193,22 @@ Now that the services are running, you can access the dashboard and perform the 
 
 -   **Dashboard:** `http://localhost:3002`
 -   **Status Pages:** `http://localhost:3003`
+
+    With `STATUS_PAGE_URL=https://status.example.com`, a page whose slug is
+    `acme` is published at `https://status.example.com/acme`. To use wildcard
+    subdomains instead, set `STATUS_PAGE_URL=https://{slug}.status.example.com`
+    and configure wildcard DNS and proxy routing.
+
+    For a custom domain such as `status.acme.com`, point its DNS at your reverse
+    proxy, terminate TLS there, and forward it to the status-page container on
+    port 3000. Preserve the original `Host` header or set `X-Forwarded-Host` to
+    it; openstatus uses that hostname to find the matching page.
+
+    The three `*_VERCEL` values are only for deployments whose status-page app
+    is itself hosted on Vercel and should attach domains through Vercel's API.
+    Leave all three blank for Docker, Coolify, Kubernetes, or another reverse
+    proxy. When they are blank, openstatus stores the custom domain but leaves
+    DNS and TLS to your infrastructure.
 
 9.  **Create a workspace and set limits**
 

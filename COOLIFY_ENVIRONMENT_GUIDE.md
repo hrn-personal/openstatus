@@ -30,6 +30,7 @@ DATABASE_AUTH_TOKEN=
 # Authentication
 AUTH_SECRET=your-32-character-secret-here
 NEXT_PUBLIC_URL=https://your-domain.com
+STATUS_PAGE_URL=https://status.your-domain.com
 SELF_HOST=true
 ```
 
@@ -158,6 +159,8 @@ WORKSPACES_HIDE_URL=false
 - **DATABASE_URL**: Must be `http://libsql:8080` (internal container communication)
 - **AUTH_SECRET**: Must be at least 32 characters
 - **NEXT_PUBLIC_URL**: Must include protocol (http:// or https://)
+- **STATUS_PAGE_URL**: Public origin of the status-page service. Slug pages use
+  `/slug`; use `https://{slug}.status.your-domain.com` for wildcard subdomains.
 - **RESEND_API_KEY**: Required for email login functionality
 
 ### **Getting Help**
@@ -174,6 +177,7 @@ DATABASE_URL=http://libsql:8080
 DATABASE_AUTH_TOKEN=
 AUTH_SECRET=your-32-char-secret
 NEXT_PUBLIC_URL=https://your-domain.com
+STATUS_PAGE_URL=https://status.your-domain.com
 RESEND_API_KEY=your-resend-key
 ```
 

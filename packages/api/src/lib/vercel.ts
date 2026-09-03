@@ -4,6 +4,14 @@ import { TRPCError } from "@trpc/server";
 
 import { env } from "../env";
 
+export function isVercelDomainsConfigured() {
+  return Boolean(
+    env.PROJECT_ID_VERCEL?.trim() &&
+    env.TEAM_ID_VERCEL?.trim() &&
+    env.VERCEL_AUTH_BEARER_TOKEN?.trim(),
+  );
+}
+
 // Vercel domain helpers — transport-layer external integrations that
 // don't belong in the service layer.
 export async function vercelFetch(path: string, init?: RequestInit) {
@@ -18,6 +26,8 @@ export async function vercelFetch(path: string, init?: RequestInit) {
 }
 
 export async function addDomainToVercel(domain: string) {
+  if (env.SELF_HOST && !isVercelDomainsConfigured()) return null;
+
   const response = await vercelFetch(
     `/v9/projects/${env.PROJECT_ID_VERCEL}/domains?teamId=${env.TEAM_ID_VERCEL}`,
     {
@@ -73,6 +83,8 @@ export async function removeDomainFromVercelIfUnused(
   domain: string,
   opts?: { excludePageId?: number },
 ) {
+  if (env.SELF_HOST && !isVercelDomainsConfigured()) return null;
+
   const holder = await db
     .select({ id: page.id })
     .from(page)
@@ -98,6 +110,8 @@ export async function removeDomainFromVercelIfUnused(
 }
 
 export async function removeDomainFromVercel(domain: string) {
+  if (env.SELF_HOST && !isVercelDomainsConfigured()) return null;
+
   const response = await vercelFetch(
     `/v9/projects/${env.PROJECT_ID_VERCEL}/domains/${encodeURIComponent(domain)}?teamId=${env.TEAM_ID_VERCEL}`,
     { method: "DELETE" },

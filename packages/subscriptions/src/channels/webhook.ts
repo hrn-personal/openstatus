@@ -1,5 +1,9 @@
 import { COLORS, COLOR_DECIMALS } from "@openstatus/notification-base";
-import { assertSafeUrl, statusLabel } from "@openstatus/utils";
+import {
+  assertSafeUrl,
+  buildStatusPageUrl,
+  statusLabel,
+} from "@openstatus/utils";
 import { z } from "zod";
 
 import { WEBHOOK_PAYLOAD_VERSION } from "../payload";
@@ -31,9 +35,11 @@ function redactWebhookUrl(url: string): string {
 }
 
 function resolveStatusPageOrigin(subscription: Subscription): string {
-  return subscription.customDomain
-    ? `https://${subscription.customDomain}`
-    : `https://${subscription.pageSlug}.openstatus.dev`;
+  return buildStatusPageUrl({
+    slug: subscription.pageSlug,
+    customDomain: subscription.customDomain,
+    baseUrl: process.env.STATUS_PAGE_URL,
+  });
 }
 
 // Deep link to the specific event on the status page, mirroring the path

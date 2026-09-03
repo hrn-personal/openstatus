@@ -6,6 +6,7 @@ import {
 } from "@openstatus/db/src/schema";
 import { EmailClient } from "@openstatus/emails";
 import { getChannel } from "@openstatus/subscriptions";
+import { buildStatusPageUrl } from "@openstatus/utils";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
@@ -88,9 +89,11 @@ export const emailRouter = createTRPCRouter({
         });
       }
 
-      const verifyUrl = subscriber.page.customDomain
-        ? `https://${subscriber.page.customDomain}/verify/${subscriber.token}`
-        : `https://${subscriber.page.slug}.openstatus.dev/verify/${subscriber.token}`;
+      const verifyUrl = `${buildStatusPageUrl({
+        slug: subscriber.page.slug,
+        customDomain: subscriber.page.customDomain,
+        baseUrl: process.env.STATUS_PAGE_URL,
+      })}/verify/${subscriber.token}`;
 
       const channel = getChannel("email");
       if (!channel) {

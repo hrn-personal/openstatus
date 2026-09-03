@@ -1,5 +1,6 @@
 import { and, db, eq, inArray } from "@openstatus/db";
 import { page, pageComponent } from "@openstatus/db/src/schema";
+import { buildStatusPageUrl } from "@openstatus/utils";
 
 import { env } from "@/env";
 
@@ -18,9 +19,11 @@ export async function getPageUrl(pageId: number): Promise<string | null> {
     .get();
 
   if (!statusPage) return null;
-  return statusPage.customDomain
-    ? `https://${statusPage.customDomain}`
-    : `https://${statusPage.slug}.openstatus.dev`;
+  return buildStatusPageUrl({
+    slug: statusPage.slug,
+    customDomain: statusPage.customDomain,
+    baseUrl: env.STATUS_PAGE_URL,
+  });
 }
 
 function getDashboardBaseUrl(): string {
@@ -93,8 +96,10 @@ export async function getReportUrl(
   // already guards with `reportUrl ? … : …`, so returning `null` here
   // is drop-in safe and keeps the two helpers symmetric.
   if (!statusPage) return null;
-  const baseUrl = statusPage.customDomain
-    ? `https://${statusPage.customDomain}`
-    : `https://${statusPage.slug}.openstatus.dev`;
+  const baseUrl = buildStatusPageUrl({
+    slug: statusPage.slug,
+    customDomain: statusPage.customDomain,
+    baseUrl: env.STATUS_PAGE_URL,
+  });
   return `${baseUrl}/events/report/${reportId}`;
 }

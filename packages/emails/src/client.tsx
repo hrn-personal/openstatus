@@ -1,6 +1,6 @@
 /** @jsxRuntime automatic @jsxImportSource react */
 
-import { statusLabel } from "@openstatus/utils";
+import { buildStatusPageUrl, statusLabel } from "@openstatus/utils";
 import { type Duration, Effect, Schedule } from "effect";
 import { render } from "react-email";
 import { Resend } from "resend";
@@ -188,9 +188,11 @@ export class EmailClient {
       idempotencyKey?: string;
     },
   ) {
-    const statusPageBaseUrl = req.customDomain
-      ? `https://${req.customDomain}`
-      : `https://${req.pageSlug}.openstatus.dev`;
+    const statusPageBaseUrl = buildStatusPageUrl({
+      slug: req.pageSlug,
+      customDomain: req.customDomain,
+      baseUrl: process.env.STATUS_PAGE_URL,
+    });
 
     if (process.env.NODE_ENV === "development") {
       console.log(
@@ -381,9 +383,11 @@ export class EmailClient {
     pageComponents: string[];
     idempotencyKey?: string;
   }) {
-    const statusPageBaseUrl = req.customDomain
-      ? `https://${req.customDomain}`
-      : `https://${req.pageSlug}.openstatus.dev`;
+    const statusPageBaseUrl = buildStatusPageUrl({
+      slug: req.pageSlug,
+      customDomain: req.customDomain,
+      baseUrl: process.env.STATUS_PAGE_URL,
+    });
 
     if (process.env.NODE_ENV === "development") {
       console.log(

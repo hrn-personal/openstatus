@@ -97,6 +97,38 @@ describe("resolveRoute", () => {
   });
 
   describe("pathname routing (path-based)", () => {
+    test("configured self-host origin uses the slug path", () => {
+      const result = resolveRoute({
+        host: "status.example.com",
+        urlHost: "localhost:3000",
+        pathname: "/acme/events",
+        statusPageUrl: "https://status.example.com",
+      });
+      expect(result).toEqual({
+        type: "pathname",
+        prefix: "acme",
+        locale: "en",
+        localeExplicit: false,
+        rewritePath: "/acme/en/events",
+      });
+    });
+
+    test("configured wildcard origin extracts the slug", () => {
+      const result = resolveRoute({
+        host: "acme.status.example.com",
+        urlHost: "localhost:3000",
+        pathname: "/events",
+        statusPageUrl: "https://{slug}.status.example.com",
+      });
+      expect(result).toEqual({
+        type: "hostname",
+        prefix: "acme",
+        locale: "en",
+        localeExplicit: false,
+        rewritePath: "/acme/en/events",
+      });
+    });
+
     test("localhost:3000/acme/en → /acme/en", () => {
       const result = resolveRoute({
         host: "localhost:3000",

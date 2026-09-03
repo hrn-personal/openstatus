@@ -1,4 +1,5 @@
 import type { RouterOutputs } from "@openstatus/api";
+import { buildStatusPageUrl } from "@openstatus/utils";
 import { format } from "date-fns";
 import { ImageResponse } from "next/og";
 
@@ -69,8 +70,13 @@ export async function GET(req: Request) {
   const title = page ? page.title : TITLE;
   const description = page ? page.description : DESCRIPTION;
   const category = content?.label || "unknown";
-  const footer =
-    page?.customDomain || page ? `${page?.slug}.openstatus.dev` : FOOTER;
+  const footer = page
+    ? buildStatusPageUrl({
+        slug: page.slug,
+        customDomain: page.customDomain,
+        baseUrl: process.env.STATUS_PAGE_URL,
+      }).replace(/^https?:\/\//, "")
+    : FOOTER;
 
   return new ImageResponse(
     <div tw="relative flex flex-col items-start justify-start w-full h-full bg-gray-100">

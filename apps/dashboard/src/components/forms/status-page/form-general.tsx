@@ -12,11 +12,6 @@ import {
 } from "@openstatus/ui/components/ui/form";
 import { Form } from "@openstatus/ui/components/ui/form";
 import { Input } from "@openstatus/ui/components/ui/input";
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-} from "@openstatus/ui/components/ui/input-group";
 import { Textarea } from "@openstatus/ui/components/ui/textarea";
 import { useDebounce } from "@openstatus/ui/hooks/use-debounce";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -36,6 +31,7 @@ import {
   FormCardSeparator,
   FormCardTitle,
 } from "@/components/forms/form-card";
+import { useStatusPageUrl } from "@/lib/deployment-context";
 import { useTRPC } from "@/lib/trpc/client";
 
 const SLUG_UNIQUE_ERROR_MESSAGE =
@@ -107,6 +103,7 @@ export function FormGeneral({
   const watchSlug = form.watch("slug");
   const watchTitle = form.watch("title");
   const watchIcon = form.watch("icon");
+  const statusPageUrl = useStatusPageUrl(watchSlug || "status");
   const debouncedSlug = useDebounce(watchSlug, 500);
   const { data: isUnique } = useQuery(
     trpc.page.getSlugUniqueness.queryOptions(
@@ -195,18 +192,14 @@ export function FormGeneral({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Slug</FormLabel>
-                  <InputGroup>
-                    <FormControl>
-                      <InputGroupInput placeholder="status" {...field} />
-                    </FormControl>
-                    <InputGroupAddon align="inline-end">
-                      .openstatus.dev
-                    </InputGroupAddon>
-                  </InputGroup>
+                  <FormControl>
+                    <Input placeholder="status" {...field} />
+                  </FormControl>
                   <FormMessage />
                   <FormDescription>
-                    Choose a unique subdomain for your status page (minimum 3
-                    characters).
+                    Published at{" "}
+                    <span className="font-mono">{statusPageUrl}</span>. Slugs
+                    must be at least 3 characters.
                   </FormDescription>
                 </FormItem>
               )}

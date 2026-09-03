@@ -25,6 +25,7 @@ export const env = createEnv({
     SLACK_CLIENT_SECRET: z.string().optional(),
     SLACK_REDIRECT_URI: z.string().optional(),
     AI_GATEWAY_API_KEY: z.string().optional(),
+    STATUS_PAGE_URL: z.string().url().optional(),
   },
 
   /**

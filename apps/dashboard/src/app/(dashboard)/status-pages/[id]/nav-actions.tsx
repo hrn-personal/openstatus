@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { QuickActions } from "@/components/dropdowns/quick-actions";
 import { NavFeedback } from "@/components/nav/nav-feedback";
 import { getActions } from "@/data/status-pages.client";
+import { useStatusPageUrl } from "@/lib/deployment-context";
 import { useTRPC } from "@/lib/trpc/client";
 
 export function NavActions() {
@@ -26,6 +27,10 @@ export function NavActions() {
 
   const { data: statusPage } = useQuery(
     trpc.page.get.queryOptions({ id: Number.parseInt(id) }),
+  );
+  const statusPageUrl = useStatusPageUrl(
+    statusPage?.slug ?? "",
+    statusPage?.customDomain,
   );
 
   const deleteStatusPageMutation = useMutation(
@@ -58,13 +63,7 @@ export function NavActions() {
         <Tooltip>
           <TooltipTrigger asChild>
             <Button variant="ghost" size="sm" className="group h-7 w-7" asChild>
-              <a
-                href={`https://${
-                  statusPage.customDomain || `${statusPage.slug}.openstatus.dev`
-                }`}
-                target="_blank"
-                rel="noreferrer"
-              >
+              <a href={statusPageUrl} target="_blank" rel="noreferrer">
                 <Globe className="text-muted-foreground group-hover:text-foreground h-4 w-4" />
               </a>
             </Button>

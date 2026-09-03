@@ -24,6 +24,9 @@
     "build:tailwind": "npx @tailwindcss/cli -i ./src/styles.css -o ./dist/styles.css --minify",
     "build": "tsup && pnpm run build:tailwind"
   },
+  "dependencies": {
+    "@openstatus/utils": "workspace:*"
+  },
   "devDependencies": {
     "@openstatus/tsconfig": "workspace:*",
     "@tailwindcss/cli": "catalog:",
