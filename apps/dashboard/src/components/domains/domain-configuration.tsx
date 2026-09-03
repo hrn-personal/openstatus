@@ -49,11 +49,89 @@ const A_RECORD_VALUE =
   process.env.NEXT_PUBLIC_VERCEL_PROJECT_DNS_A || "76.76.21.21";
 
 export default function DomainConfiguration({ domain }: { domain: string }) {
-  const { status, domainJson, steps, isLoading, managed } =
+  const { status, domainJson, steps, isLoading, managed, selfHostedReady } =
     useDomainStatus(domain);
-  const { statusPageBaseUrl } = useDeploymentConfig();
+  const { customDomainCnameTarget, statusPageBaseUrl } = useDeploymentConfig();
 
   if (!managed) {
+    if (customDomainCnameTarget) {
+      return (
+        <div className="space-y-3">
+          <div className="flex items-center gap-3 border border-transparent px-4">
+            <DomainStatusIcon
+              status={
+                selfHostedReady ? "Valid Configuration" : "Pending Verification"
+              }
+              loading={isLoading}
+            />
+            <p className="text-sm font-semibold">
+              {selfHostedReady ? "Valid Configuration" : "Awaiting DNS"}
+            </p>
+            <Badge variant="secondary">{domain}</Badge>
+          </div>
+
+          <StepCard variant={selfHostedReady ? "completed" : "active"}>
+            <StepCardHeader>
+              <StepCardIndicator step={1} />
+              <StepCardTitle>Configure DNS</StepCardTitle>
+              <StepCardBadge>Done</StepCardBadge>
+            </StepCardHeader>
+            <StepCardContent className="space-y-3">
+              <p className="text-sm">
+                Add this DNS record for <InlineSnippet>{domain}</InlineSnippet>:
+              </p>
+              <div className="bg-muted grid grid-cols-2 gap-4 rounded-md p-3 sm:grid-cols-4">
+                <div>
+                  <p className="text-sm font-bold">Type</p>
+                  <p className="mt-1 font-mono text-sm">CNAME</p>
+                </div>
+                <div>
+                  <p className="text-sm font-bold">Name</p>
+                  <p className="mt-1 font-mono text-sm break-all">{domain}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-bold">Value</p>
+                  <p className="mt-1 font-mono text-sm break-all">
+                    {customDomainCnameTarget}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm font-bold">TTL</p>
+                  <p className="mt-1 font-mono text-sm">Auto</p>
+                </div>
+              </div>
+              <p className="text-muted-foreground text-sm">
+                For an apex domain that cannot use CNAME, use ALIAS/ANAME or
+                point its A/AAAA records at this server.
+              </p>
+            </StepCardContent>
+          </StepCard>
+
+          <StepCard variant={selfHostedReady ? "completed" : "upcoming"}>
+            <StepCardHeader>
+              <StepCardIndicator step={2} />
+              <StepCardTitle>Activate HTTPS</StepCardTitle>
+              <StepCardBadge>Done</StepCardBadge>
+            </StepCardHeader>
+            <StepCardContent className="space-y-2">
+              <p className="text-sm">
+                Once DNS reaches this server, Caddy validates the registered
+                domain and provisions HTTPS automatically on the first request.
+              </p>
+              <a
+                href={"https://" + domain}
+                target="_blank"
+                rel="noreferrer"
+                className="text-sm font-medium underline underline-offset-4"
+              >
+                Open domain
+              </a>
+            </StepCardContent>
+          </StepCard>
+        </div>
+      );
+    }
+
     return (
       <div className="space-y-2 px-4 text-sm">
         <p className="font-semibold">Managed by your reverse proxy</p>
@@ -68,6 +146,10 @@ export default function DomainConfiguration({ domain }: { domain: string }) {
             <InlineSnippet>{statusPageBaseUrl}</InlineSnippet>.
           </p>
         ) : null}
+        <p className="text-muted-foreground">
+          Set <InlineSnippet>CUSTOM_DOMAIN_CNAME_TARGET</InlineSnippet> to show
+          automatic Caddy setup instructions here.
+        </p>
       </div>
     );
   }

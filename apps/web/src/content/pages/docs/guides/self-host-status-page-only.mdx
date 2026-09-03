@@ -142,7 +142,7 @@ If you need automated monitoring, follow the [full self-hosting guide](/docs/gui
 
     In the dashboard, create a new status page, add components for the services you want to display, and publish it. With the example configuration, a page whose slug is `acme` is available at `http://localhost:3001/acme`. In production, set `STATUS_PAGE_URL=https://status.example.com`; use `https://{slug}.status.example.com` if your DNS and reverse proxy support wildcard subdomains.
 
-    Custom domains do not require Vercel when self-hosting. Point the custom hostname at your reverse proxy, terminate TLS there, forward requests to the status-page container, and preserve `Host` or `X-Forwarded-Host`. Only fill `PROJECT_ID_VERCEL`, `TEAM_ID_VERCEL`, and `VERCEL_AUTH_BEARER_TOKEN` when the status-page app is deployed on Vercel and Vercel should manage domain attachment and certificates.
+    Custom domains do not require Vercel when self-hosting. Set `CUSTOM_DOMAIN_CNAME_TARGET` to the stable hostname routed to the status-page container. For automatic certificates with Caddy, configure On-Demand TLS with `ask http://127.0.0.1:3001/api/caddy/ask`; unknown domains are rejected, while saved custom domains and configured wildcard slug hostnames are allowed. Only fill `PROJECT_ID_VERCEL`, `TEAM_ID_VERCEL`, and `VERCEL_AUTH_BEARER_TOKEN` when the status-page app is deployed on Vercel and Vercel should manage domain attachment and certificates.
 
 ## Service architecture
 

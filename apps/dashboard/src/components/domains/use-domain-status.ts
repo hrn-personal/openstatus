@@ -8,7 +8,8 @@ import { useTRPC } from "@/lib/trpc/client";
 
 export function useDomainStatus(domain?: string) {
   const trpc = useTRPC();
-  const { vercelDomainsConfigured } = useDeploymentConfig();
+  const { customDomainCnameTarget, vercelDomainsConfigured } =
+    useDeploymentConfig();
   const enabled = vercelDomainsConfigured && Boolean(domain);
   const {
     data: domainJson,
@@ -37,12 +38,51 @@ export function useDomainStatus(domain?: string) {
       { enabled: enabled && !domainJson?.verified },
     ),
   );
+  const {
+    data: selfHostedReady,
+    refetch: refetchSelfHosted,
+    isFetching: isFetchingSelfHosted,
+  } = useQuery({
+    queryKey: ["self-hosted-custom-domain", domain],
+    queryFn: async () => {
+      const response = await fetch(`https://${domain}/api/domain-check`, {
+        cache: "no-store",
+      });
+      if (!response.ok) return false;
+
+      const result: unknown = await response.json();
+      return (
+        typeof result === "object" &&
+        result !== null &&
+        "configured" in result &&
+        result.configured === true &&
+        "domain" in result &&
+        result.domain === domain?.toLowerCase()
+      );
+    },
+    enabled:
+      !vercelDomainsConfigured &&
+      Boolean(customDomainCnameTarget) &&
+      Boolean(domain),
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
 
   const refreshAll = useCallback(() => {
-    refetchDomain();
-    refetchConfig();
-    refetchVerification();
-  }, [refetchDomain, refetchConfig, refetchVerification]);
+    if (vercelDomainsConfigured) {
+      refetchDomain();
+      refetchConfig();
+      refetchVerification();
+    } else {
+      refetchSelfHosted();
+    }
+  }, [
+    refetchConfig,
+    refetchDomain,
+    refetchSelfHosted,
+    refetchVerification,
+    vercelDomainsConfigured,
+  ]);
 
   let status: DomainVerificationStatusProps = "Valid Configuration";
 
@@ -68,13 +108,14 @@ export function useDomainStatus(domain?: string) {
     status = "Valid Configuration";
   }
 
-  const isLoading =
-    isLoadingDomain ||
-    isLoadingConfig ||
-    isLoadingVerification ||
-    isRefetchingDomain ||
-    isRefetchingConfig ||
-    isRefetchingVerification;
+  const isLoading = vercelDomainsConfigured
+    ? isLoadingDomain ||
+      isLoadingConfig ||
+      isLoadingVerification ||
+      isRefetchingDomain ||
+      isRefetchingConfig ||
+      isRefetchingVerification
+    : isFetchingSelfHosted;
 
   const steps = {
     dns:
@@ -94,7 +135,10 @@ export function useDomainStatus(domain?: string) {
   } satisfies Record<string, StepCardVariant>;
 
   return {
+    canRefresh:
+      vercelDomainsConfigured || Boolean(customDomainCnameTarget && domain),
     managed: vercelDomainsConfigured,
+    selfHostedReady: selfHostedReady === true,
     status,
     domainJson,
     steps,

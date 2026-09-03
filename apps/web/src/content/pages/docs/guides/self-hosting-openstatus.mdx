@@ -83,6 +83,9 @@ This guide is divided into three parts: launching the services, setting up analy
     # Public origin routed to the status-page container. Slug pages are
     # published below it, for example https://status.example.com/acme.
     STATUS_PAGE_URL=https://status.example.com
+
+    # Stable hostname customers use as their custom-domain CNAME target.
+    CUSTOM_DOMAIN_CNAME_TARGET=status.example.com
     ```
 
     You'll fill in the Tinybird tokens in Part 2, once the container is running.
@@ -199,10 +202,39 @@ Now that the services are running, you can access the dashboard and perform the 
     subdomains instead, set `STATUS_PAGE_URL=https://{slug}.status.example.com`
     and configure wildcard DNS and proxy routing.
 
-    For a custom domain such as `status.acme.com`, point its DNS at your reverse
-    proxy, terminate TLS there, and forward it to the status-page container on
-    port 3000. Preserve the original `Host` header or set `X-Forwarded-Host` to
-    it; openstatus uses that hostname to find the matching page.
+    For Caddy, set the hostname users should target with
+    `CUSTOM_DOMAIN_CNAME_TARGET=status.example.com`, then enable On-Demand TLS:
+
+    ```caddyfile
+    {
+      on_demand_tls {
+        ask http://127.0.0.1:3003/api/caddy/ask
+      }
+    }
+
+    status.example.com {
+      reverse_proxy 127.0.0.1:3003
+    }
+
+    https:// {
+      tls {
+        on_demand
+      }
+      reverse_proxy 127.0.0.1:3003
+    }
+    ```
+
+    Keep dashboard, API, ingest, and workflow hostnames in their own exact
+    Caddy site blocks. The catch-all handles only other hostnames. Before Caddy
+    issues a certificate, it calls the `ask` endpoint; openstatus returns `200`
+    only when the hostname is a saved custom domain or a valid configured slug
+    hostname. Unknown domains are denied.
+
+    A customer then points a CNAME such as `status.acme.com` to
+    `status.example.com`. Caddy provisions HTTPS on the first request and
+    forwards the original hostname to the status-page container. The dashboard
+    checks `/api/domain-check` through the custom hostname and marks it ready
+    only when the request reaches the matching openstatus page.
 
     The three `*_VERCEL` values are only for deployments whose status-page app
     is itself hosted on Vercel and should attach domains through Vercel's API.

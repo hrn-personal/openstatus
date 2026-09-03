@@ -83,6 +83,19 @@ export default async function RootLayout({
 }>) {
   const session = await auth();
   const statusPageBaseUrl = process.env.STATUS_PAGE_URL?.trim() || null;
+  const customDomainCnameTarget = (() => {
+    const configured = process.env.CUSTOM_DOMAIN_CNAME_TARGET?.trim();
+    if (configured) return configured.replace(/\.$/, "");
+    if (!statusPageBaseUrl) return null;
+
+    try {
+      const hostname = new URL(statusPageBaseUrl.split("{slug}.").join(""))
+        .hostname;
+      return hostname === "localhost" ? null : hostname;
+    } catch {
+      return null;
+    }
+  })();
   const vercelDomainsConfigured = Boolean(
     process.env.PROJECT_ID_VERCEL?.trim() &&
     process.env.TEAM_ID_VERCEL?.trim() &&
@@ -103,7 +116,11 @@ export default async function RootLayout({
       >
         <SessionProvider session={session}>
           <DeploymentProvider
-            value={{ statusPageBaseUrl, vercelDomainsConfigured }}
+            value={{
+              customDomainCnameTarget,
+              statusPageBaseUrl,
+              vercelDomainsConfigured,
+            }}
           >
             <TRPCReactProvider>
               <NuqsAdapter>
