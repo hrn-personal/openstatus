@@ -39,32 +39,67 @@ export function useDomainStatus(domain?: string) {
     ),
   );
   const {
-    data: selfHostedReady,
-    refetch: refetchSelfHosted,
-    isFetching: isFetchingSelfHosted,
+    data: selfHostedStatus,
+    refetch: refetchSelfHostedStatus,
+    isFetching: isFetchingSelfHostedStatus,
   } = useQuery({
-    queryKey: ["self-hosted-custom-domain", domain],
+    queryKey: ["self-hosted-custom-domain-status", domain],
     queryFn: async () => {
       const response = await fetch(
         `https://${customDomainCnameTarget}/api/domain-check?domain=${encodeURIComponent(domain ?? "")}`,
         { cache: "no-store" },
       );
-      if (!response.ok) return false;
 
       const result: unknown = await response.json();
-      return (
+      const matchesDomain =
         typeof result === "object" &&
         result !== null &&
-        "configured" in result &&
-        result.configured === true &&
         "domain" in result &&
-        result.domain === domain?.toLowerCase()
-      );
+        result.domain === domain?.toLowerCase();
+
+      return {
+        configured:
+          matchesDomain && "configured" in result && result.configured === true,
+        dns: matchesDomain && "dns" in result && result.dns === true,
+      };
     },
     enabled:
       !vercelDomainsConfigured &&
       Boolean(customDomainCnameTarget) &&
       Boolean(domain),
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
+  const selfHostedDnsReady =
+    selfHostedStatus?.configured === true && selfHostedStatus.dns === true;
+  const {
+    data: selfHostedHttpsReady,
+    refetch: refetchSelfHostedHttps,
+    isFetching: isFetchingSelfHostedHttps,
+  } = useQuery({
+    queryKey: ["self-hosted-custom-domain-https", domain],
+    queryFn: async () => {
+      try {
+        const response = await fetch(`https://${domain}/api/domain-check`, {
+          cache: "no-store",
+          signal: AbortSignal.timeout(10_000),
+        });
+        if (!response.ok) return false;
+
+        const result: unknown = await response.json();
+        return (
+          typeof result === "object" &&
+          result !== null &&
+          "configured" in result &&
+          result.configured === true &&
+          "domain" in result &&
+          result.domain === domain?.toLowerCase()
+        );
+      } catch {
+        return false;
+      }
+    },
+    enabled: !vercelDomainsConfigured && selfHostedDnsReady && Boolean(domain),
     retry: false,
     refetchOnWindowFocus: false,
   });
@@ -75,13 +110,16 @@ export function useDomainStatus(domain?: string) {
       refetchConfig();
       refetchVerification();
     } else {
-      refetchSelfHosted();
+      refetchSelfHostedStatus();
+      if (selfHostedDnsReady) refetchSelfHostedHttps();
     }
   }, [
     refetchConfig,
     refetchDomain,
-    refetchSelfHosted,
+    refetchSelfHostedHttps,
+    refetchSelfHostedStatus,
     refetchVerification,
+    selfHostedDnsReady,
     vercelDomainsConfigured,
   ]);
 
@@ -116,7 +154,7 @@ export function useDomainStatus(domain?: string) {
       isRefetchingDomain ||
       isRefetchingConfig ||
       isRefetchingVerification
-    : isFetchingSelfHosted;
+    : isFetchingSelfHostedStatus || isFetchingSelfHostedHttps;
 
   const steps = {
     dns:
@@ -139,7 +177,9 @@ export function useDomainStatus(domain?: string) {
     canRefresh:
       vercelDomainsConfigured || Boolean(customDomainCnameTarget && domain),
     managed: vercelDomainsConfigured,
-    selfHostedReady: selfHostedReady === true,
+    selfHostedDnsReady,
+    selfHostedHttpsReady: selfHostedHttpsReady === true,
+    selfHostedReady: selfHostedHttpsReady === true,
     status,
     domainJson,
     steps,

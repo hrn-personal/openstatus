@@ -49,8 +49,15 @@ const A_RECORD_VALUE =
   process.env.NEXT_PUBLIC_VERCEL_PROJECT_DNS_A || "76.76.21.21";
 
 export default function DomainConfiguration({ domain }: { domain: string }) {
-  const { status, domainJson, steps, isLoading, managed, selfHostedReady } =
-    useDomainStatus(domain);
+  const {
+    status,
+    domainJson,
+    steps,
+    isLoading,
+    managed,
+    selfHostedDnsReady,
+    selfHostedHttpsReady,
+  } = useDomainStatus(domain);
   const { customDomainCnameTarget, statusPageBaseUrl } = useDeploymentConfig();
 
   if (!managed) {
@@ -60,17 +67,23 @@ export default function DomainConfiguration({ domain }: { domain: string }) {
           <div className="flex items-center gap-3 border border-transparent px-4">
             <DomainStatusIcon
               status={
-                selfHostedReady ? "Valid Configuration" : "Pending Verification"
+                selfHostedHttpsReady
+                  ? "Valid Configuration"
+                  : "Pending Verification"
               }
               loading={isLoading}
             />
             <p className="text-sm font-semibold">
-              {selfHostedReady ? "Valid Configuration" : "Awaiting DNS"}
+              {selfHostedHttpsReady
+                ? "Valid Configuration"
+                : selfHostedDnsReady
+                  ? "DNS configured; HTTPS pending"
+                  : "Awaiting DNS"}
             </p>
             <Badge variant="secondary">{domain}</Badge>
           </div>
 
-          <StepCard variant={selfHostedReady ? "completed" : "active"}>
+          <StepCard variant={selfHostedDnsReady ? "completed" : "active"}>
             <StepCardHeader>
               <StepCardIndicator step={1} />
               <StepCardTitle>Configure DNS</StepCardTitle>
@@ -107,7 +120,15 @@ export default function DomainConfiguration({ domain }: { domain: string }) {
             </StepCardContent>
           </StepCard>
 
-          <StepCard variant={selfHostedReady ? "completed" : "upcoming"}>
+          <StepCard
+            variant={
+              selfHostedHttpsReady
+                ? "completed"
+                : selfHostedDnsReady
+                  ? "active"
+                  : "upcoming"
+            }
+          >
             <StepCardHeader>
               <StepCardIndicator step={2} />
               <StepCardTitle>Activate HTTPS</StepCardTitle>
@@ -115,8 +136,9 @@ export default function DomainConfiguration({ domain }: { domain: string }) {
             </StepCardHeader>
             <StepCardContent className="space-y-2">
               <p className="text-sm">
-                Once DNS reaches this server, Caddy validates the registered
-                domain and provisions HTTPS automatically on the first request.
+                {selfHostedDnsReady
+                  ? "DNS is correct, but HTTPS has not completed yet. Check the Caddy service logs for the certificate issuance error."
+                  : "Once DNS reaches this server, Caddy validates the registered domain and provisions HTTPS automatically on the first request."}
               </p>
               <a
                 href={"https://" + domain}
