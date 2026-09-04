@@ -92,6 +92,12 @@ export default function Page() {
   const regionLatencyData = useMemo(() => {
     if (!monitor?.data.regions?.data) return [];
 
+    const privateLocationMap = new Map(
+      (
+        monitor.privateLocations as { id: number; name: string }[] | undefined
+      )?.map((pl) => [String(pl.id), pl.name]) ?? [],
+    );
+
     const grouped = monitor.data.regions.data
       .sort((a, b) => a.timestamp - b.timestamp)
       .reduce(
@@ -107,7 +113,9 @@ export default function Page() {
           if (!acc[timestamp]) {
             acc[timestamp] = { timestamp };
           }
-          acc[timestamp][item.region] = item.p75Latency;
+          const displayRegion =
+            privateLocationMap.get(item.region) ?? item.region;
+          acc[timestamp][displayRegion] = item.p75Latency;
           return acc;
         },
         {} as Record<
@@ -117,7 +125,7 @@ export default function Page() {
       );
 
     return Object.values(grouped);
-  }, [monitor?.data.regions?.data]);
+  }, [monitor?.data.regions?.data, monitor?.privateLocations]);
 
   const uptimeData = useMemo(() => {
     if (!monitor?.data.uptime?.data) return [];

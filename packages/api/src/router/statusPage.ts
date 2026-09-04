@@ -1267,8 +1267,33 @@ export const statusPageRouter = createTRPCRouter({
         { data: [] },
       ];
 
+      const privateLocations =
+        await opts.ctx.db.query.privateLocationToMonitors.findMany({
+          where: and(
+            eq(privateLocationToMonitors.monitorId, _monitor.id),
+            isNull(privateLocationToMonitors.deletedAt),
+          ),
+          with: {
+            privateLocation: {
+              columns: { id: true, name: true },
+            },
+          },
+        });
+
       return {
         ...selectPublicMonitorSchema.parse(_monitor),
+        privateLocations: privateLocations
+          .filter(
+            (
+              pl,
+            ): pl is typeof pl & {
+              privateLocation: { id: number; name: string };
+            } => pl.privateLocation !== null,
+          )
+          .map((pl) => ({
+            id: pl.privateLocation.id,
+            name: pl.privateLocation.name,
+          })),
         data: {
           latency,
           regions,
