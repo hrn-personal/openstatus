@@ -34,23 +34,7 @@ export const columns: ColumnDef<PrivateLocation>[] = [
     ),
     enableHiding: false,
     cell: ({ row }) => {
-      const rawValue = String(row.getValue("status"));
-      // Derive from lastSeenAt as fallback when cron hasn't run yet
-      const lastSeenAt = (row.original as PrivateLocation).lastSeenAt as
-        | string
-        | Date
-        | null
-        | undefined;
-      let value = rawValue;
-      if (lastSeenAt) {
-        const date =
-          lastSeenAt instanceof Date ? lastSeenAt : new Date(lastSeenAt);
-        if (!Number.isNaN(date.getTime())) {
-          const stale = Date.now() - date.getTime() > 15 * 60 * 1000;
-          if (!stale && rawValue === "error") value = "active";
-          if (stale && rawValue === "active") value = "error";
-        }
-      }
+      const value = String(row.getValue("status"));
       return (
         <TableCellText
           value={value}
