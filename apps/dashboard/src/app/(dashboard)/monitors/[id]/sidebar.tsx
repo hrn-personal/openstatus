@@ -2,6 +2,7 @@
 
 import { deserialize } from "@openstatus/assertions";
 import { Logs } from "@openstatus/icons";
+import { formatRegionCode } from "@openstatus/regions";
 import { Badge } from "@openstatus/ui/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
@@ -88,9 +89,16 @@ export function Sidebar() {
                   // Otherwise, sort alphabetically
                   return a.localeCompare(b);
                 });
-                return sortedRegions.length > 6
-                  ? `${sortedRegions.length} regions`
-                  : sortedRegions.join(", ");
+                const displayNames = sortedRegions.map((r) => {
+                  const pl = monitor.privateLocations?.find(
+                    (l) => String(l.id) === r,
+                  );
+                  if (pl) return pl.name;
+                  return formatRegionCode(r);
+                });
+                return displayNames.length > 6
+                  ? `${displayNames.length} regions`
+                  : displayNames.join(", ");
               })(),
             },
             {

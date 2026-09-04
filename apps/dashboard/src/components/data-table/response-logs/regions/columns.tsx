@@ -33,10 +33,11 @@ export function getColumns(
       cell: ({ row }) => {
         const value = row.getValue("region");
         if (typeof value === "string") {
+          const privateLocation = privateLocations.find(
+            (location) => String(location.id) === String(value),
+          );
           const region = getRegionInfo(value, {
-            location: privateLocations.find(
-              (location) => String(location.id) === String(value),
-            )?.name,
+            location: privateLocation?.name,
           });
           return (
             <TooltipProvider>
@@ -44,7 +45,9 @@ export function getColumns(
                 <TooltipTrigger className="flex h-[50px] items-center gap-1">
                   {region.flag}{" "}
                   <span className="max-w-[90px] truncate">
-                    {formatRegionCode(region.code)}
+                    {privateLocation
+                      ? privateLocation.name
+                      : formatRegionCode(region.code)}
                   </span>
                 </TooltipTrigger>
                 <TooltipContent side="left">
